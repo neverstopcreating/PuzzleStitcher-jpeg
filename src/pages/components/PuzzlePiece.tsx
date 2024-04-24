@@ -21,7 +21,12 @@ export function loadPuzzlePiece(imageSrc: string): Promise<PuzzlePiece> {
 
 export default class PuzzlePiece {
     image: HTMLImageElement;
-    edgeData: { top: number[], right: number[], bottom: number[], left: number[] };
+    edgeData: {
+        top: { r: number, g: number, b: number }[],
+        right: { r: number, g: number, b: number }[],
+        bottom: { r: number, g: number, b: number }[],
+        left: { r: number, g: number, b: number }[]
+    };
 
     constructor(image: HTMLImageElement, buffer: Uint8ClampedArray) {
         this.image = image;
@@ -39,9 +44,12 @@ export default class PuzzlePiece {
             return false;
         }
 
-        // Check pixel colors
+        const colorTolerance = 25;
+        // Check pixel colors with tolerance
         for (let i = 0; i < thisEdge.length; i++) {
-            if (thisEdge[i] !== otherEdge[i]) {
+            if (Math.abs(thisEdge[i].r - otherEdge[i].r) > colorTolerance ||
+                Math.abs(thisEdge[i].g - otherEdge[i].g) > colorTolerance ||
+                Math.abs(thisEdge[i].b - otherEdge[i].b) > colorTolerance) {
                 return false;
             }
         }
@@ -60,53 +68,45 @@ export default class PuzzlePiece {
         this.edgeData.left = this.extractEdgeData(buffer, 'left');
     }
 
-    private extractEdgeData(buffer: Uint8ClampedArray, edge: 'top' | 'bottom' | 'left' | 'right'): number[] {
+    private extractEdgeData(buffer: Uint8ClampedArray, edge: 'top' | 'bottom' | 'left' | 'right'): {
+        r: number,
+        g: number,
+        b: number
+    }[] {
         const width = this.image.width;
         const height = this.image.height;
-        const colors: number[] = [];
+        const colors: { r: number, g: number, b: number }[] = [];
 
         switch (edge) {
             case 'top':
                 for (let x = 0; x < width; x++) {
                     const index = (x * 4); //RGBA 4 values
-                    const r = buffer[index];
-                    const g = buffer[index + 1];
-                    const b = buffer[index + 2];
-                    colors.push(Math.floor((r + g + b) / 3));
+                    colors.push({r: buffer[index], g: buffer[index + 1], b: buffer[index + 2]});
                 }
                 break;
             case 'bottom':
                 for (let x = 0; x < width; x++) {
                     const index = ((width * (height - 1) + x) * 4);
-                    const r = buffer[index];
-                    const g = buffer[index + 1];
-                    const b = buffer[index + 2];
-                    colors.push(Math.floor((r + g + b) / 3));
+                    colors.push({r: buffer[index], g: buffer[index + 1], b: buffer[index + 2]});
                 }
                 break;
             case 'left':
                 for (let y = 0; y < height; y++) {
                     const index = (y * width * 4); // Start of each row
-                    const r = buffer[index];
-                    const g = buffer[index + 1];
-                    const b = buffer[index + 2];
-                    colors.push(Math.floor((r + g + b) / 3));
+                    colors.push({r: buffer[index], g: buffer[index + 1], b: buffer[index + 2]});
                 }
                 break;
             case 'right':
                 for (let y = 0; y < height; y++) {
                     const index = ((y * width + width - 1) * 4); // Last pixel in each row
-                    const r = buffer[index];
-                    const g = buffer[index + 1];
-                    const b = buffer[index + 2];
-                    colors.push(Math.floor((r + g + b) / 3));
+                    colors.push({r: buffer[index], g: buffer[index + 1], b: buffer[index + 2]});
                 }
                 break;
         }
         return colors;
     }
 
-    private getEdgeData(edge: 'top' | 'bottom' | 'left' | 'right'): number[] {
+    private getEdgeData(edge: 'top' | 'bottom' | 'left' | 'right'): { r: number, g: number, b: number }[] {
         return this.edgeData[edge];
     }
 

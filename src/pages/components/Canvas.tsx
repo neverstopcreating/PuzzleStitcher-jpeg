@@ -20,7 +20,7 @@ function Canvas() {
 
             const loadingPuzzlePieces: Promise<PuzzlePiece>[] = [];
             for (let i = 0; i < 256; i++) {
-                const url = `/peaces/peace-${i}.png`;
+                const url = `/peaces_extra/peace-${i}.jpg`;
                 loadingPuzzlePieces.push(loadPuzzlePiece(url))
             }
 
@@ -67,8 +67,10 @@ function Canvas() {
 
             // Create arrays to hold matched ones for the top row and left column
             const leftColumnPieces = [topLeftPiece];
-
             let previousPiece = topLeftPiece;
+
+            console.log('foo',leftColumnPieces);
+
             for (let y = 1; y < puzzleHeightInPieces; y++) {
                 for (const pieceToCheck of leftColumnPiecesGroup) {
                     if (previousPiece.matchWith(pieceToCheck, 'bottom')) {
