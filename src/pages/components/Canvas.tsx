@@ -77,9 +77,16 @@ function Canvas() {
                 for (const pieceToCheck of leftColumnPiecesGroup) {
                     let score = previousPiece.matchWith(pieceToCheck, 'bottom')
 
+
                     if (bestCandidate == null || score < bestCandidateScore) {
                         bestCandidate = pieceToCheck;
                         bestCandidateScore = score;
+                    }
+
+                    //if we will use this code for png then right piece difference score
+                    //will be 0 and we want to finish matching and not check the rest of the pieces
+                    if (bestCandidateScore === 0) {
+                        break;
                     }
                 }
 
@@ -105,6 +112,10 @@ function Canvas() {
                         if (bestCandidate == null || score < bestCandidateScore) {
                             bestCandidate = pieceToCheck;
                             bestCandidateScore = score;
+                        }
+
+                        if (bestCandidateScore === 0) {
+                            break;
                         }
                     }
                     if (bestCandidate == null) {
