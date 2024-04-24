@@ -69,32 +69,51 @@ function Canvas() {
             const leftColumnPieces = [topLeftPiece];
             let previousPiece = topLeftPiece;
 
-            console.log('foo',leftColumnPieces);
-
             for (let y = 1; y < puzzleHeightInPieces; y++) {
+                // To match jpeg I am finding sides with less difference
+                let bestCandidate: PuzzlePiece | undefined = undefined;
+                let bestCandidateScore: number = Number.MAX_VALUE;
+
                 for (const pieceToCheck of leftColumnPiecesGroup) {
-                    if (previousPiece.matchWith(pieceToCheck, 'bottom')) {
-                        pieceToCheck.draw(ctx, 0, y);
-                        leftColumnPieces.push(pieceToCheck);
-                        previousPiece = pieceToCheck;
-                        leftColumnPiecesGroup.delete(pieceToCheck);
-                        break;
+                    let score = previousPiece.matchWith(pieceToCheck, 'bottom')
+
+                    if (bestCandidate == null || score < bestCandidateScore) {
+                        bestCandidate = pieceToCheck;
+                        bestCandidateScore = score;
                     }
                 }
+
+                if (bestCandidate == null) {
+                    throw new Error('Failed to find a piece to match');
+                }
+
+                bestCandidate.draw(ctx, 0, y);
+                leftColumnPieces.push(bestCandidate);
+                previousPiece = bestCandidate;
+                leftColumnPiecesGroup.delete(bestCandidate);
             }
 
             for (let y = 0; y < puzzleHeightInPieces; y++) {
                 let previousPiece = leftColumnPieces[y];
                 for (let x = 1; x < puzzleWidthInPieces; x++) {
-                    for (const pieceToCheck of otherPiecesGroup) {
-                        if (previousPiece.matchWith(pieceToCheck, 'right')) {
-                            pieceToCheck.draw(ctx, x, y);
-                            previousPiece = pieceToCheck;
-                            otherPiecesGroup.delete(pieceToCheck);
-                            break;
-                        }
+                    let bestCandidate: PuzzlePiece | undefined = undefined;
+                    let bestCandidateScore: number = Number.MAX_VALUE;
 
+                    for (const pieceToCheck of otherPiecesGroup) {
+                        let score = previousPiece.matchWith(pieceToCheck, 'right')
+
+                        if (bestCandidate == null || score < bestCandidateScore) {
+                            bestCandidate = pieceToCheck;
+                            bestCandidateScore = score;
+                        }
                     }
+                    if (bestCandidate == null) {
+                        throw new Error('Failed to find a piece to match');
+                    }
+
+                    bestCandidate.draw(ctx, x, y);
+                    previousPiece = bestCandidate;
+                    otherPiecesGroup.delete(bestCandidate);
                 }
             }
         }

@@ -21,12 +21,7 @@ export function loadPuzzlePiece(imageSrc: string): Promise<PuzzlePiece> {
 
 export default class PuzzlePiece {
     image: HTMLImageElement;
-    edgeData: {
-        top: { r: number, g: number, b: number }[],
-        right: { r: number, g: number, b: number }[],
-        bottom: { r: number, g: number, b: number }[],
-        left: { r: number, g: number, b: number }[]
-    };
+    edgeData: { top: number[], right: number[], bottom: number[], left: number[] };
 
     constructor(image: HTMLImageElement, buffer: Uint8ClampedArray) {
         this.image = image;
@@ -35,25 +30,21 @@ export default class PuzzlePiece {
     }
 
     //I am using only 2 sides in my alghoritm but it can be easily extended to 4 sides for future implementations
-    matchWith(otherPiece: PuzzlePiece, edgeToMatch: 'top' | 'bottom' | 'left' | 'right'): boolean {
+    matchWith(otherPiece: PuzzlePiece, edgeToMatch: 'top' | 'bottom' | 'left' | 'right'): number {
         const thisEdge = this.getEdgeData(edgeToMatch);
         const otherEdge = otherPiece.getEdgeData(this.getOppositeEdge(edgeToMatch));
 
         // Check length
         if (thisEdge.length !== otherEdge.length) {
-            return false;
+            return Number.MAX_VALUE;
         }
 
-        const colorTolerance = 25;
-        // Check pixel colors with tolerance
+        // Check pixel colors
+        let differenceSum = 0;
         for (let i = 0; i < thisEdge.length; i++) {
-            if (Math.abs(thisEdge[i].r - otherEdge[i].r) > colorTolerance ||
-                Math.abs(thisEdge[i].g - otherEdge[i].g) > colorTolerance ||
-                Math.abs(thisEdge[i].b - otherEdge[i].b) > colorTolerance) {
-                return false;
-            }
+            differenceSum += Math.abs(thisEdge[i] - otherEdge[i]);
         }
-        return true;
+        return differenceSum;
     }
 
     draw(ctx: CanvasRenderingContext2D, x: number, y: number) {
@@ -68,45 +59,53 @@ export default class PuzzlePiece {
         this.edgeData.left = this.extractEdgeData(buffer, 'left');
     }
 
-    private extractEdgeData(buffer: Uint8ClampedArray, edge: 'top' | 'bottom' | 'left' | 'right'): {
-        r: number,
-        g: number,
-        b: number
-    }[] {
+    private extractEdgeData(buffer: Uint8ClampedArray, edge: 'top' | 'bottom' | 'left' | 'right'): number[] {
         const width = this.image.width;
         const height = this.image.height;
-        const colors: { r: number, g: number, b: number }[] = [];
+        const colors: number[] = [];
 
         switch (edge) {
             case 'top':
                 for (let x = 0; x < width; x++) {
                     const index = (x * 4); //RGBA 4 values
-                    colors.push({r: buffer[index], g: buffer[index + 1], b: buffer[index + 2]});
+                    const r = buffer[index];
+                    const g = buffer[index + 1];
+                    const b = buffer[index + 2];
+                    colors.push(Math.floor((r + g + b) / 3));
                 }
                 break;
             case 'bottom':
                 for (let x = 0; x < width; x++) {
                     const index = ((width * (height - 1) + x) * 4);
-                    colors.push({r: buffer[index], g: buffer[index + 1], b: buffer[index + 2]});
+                    const r = buffer[index];
+                    const g = buffer[index + 1];
+                    const b = buffer[index + 2];
+                    colors.push(Math.floor((r + g + b) / 3));
                 }
                 break;
             case 'left':
                 for (let y = 0; y < height; y++) {
                     const index = (y * width * 4); // Start of each row
-                    colors.push({r: buffer[index], g: buffer[index + 1], b: buffer[index + 2]});
+                    const r = buffer[index];
+                    const g = buffer[index + 1];
+                    const b = buffer[index + 2];
+                    colors.push(Math.floor((r + g + b) / 3));
                 }
                 break;
             case 'right':
                 for (let y = 0; y < height; y++) {
                     const index = ((y * width + width - 1) * 4); // Last pixel in each row
-                    colors.push({r: buffer[index], g: buffer[index + 1], b: buffer[index + 2]});
+                    const r = buffer[index];
+                    const g = buffer[index + 1];
+                    const b = buffer[index + 2];
+                    colors.push(Math.floor((r + g + b) / 3));
                 }
                 break;
         }
         return colors;
     }
 
-    private getEdgeData(edge: 'top' | 'bottom' | 'left' | 'right'): { r: number, g: number, b: number }[] {
+    private getEdgeData(edge: 'top' | 'bottom' | 'left' | 'right'): number[] {
         return this.edgeData[edge];
     }
 
